@@ -1,3 +1,9 @@
 https://www.udacity.com/media/js/standalone/libs/gamedev_assets/robowalk/robowalk18.png
 
+
 webplatform.org
+
+https://www.codeandweb.com/texturepacker
+http://www.leshylabs.com/
+
+http://www.mapeditor.org/
