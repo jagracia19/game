@@ -6,6 +6,7 @@ var context = null;
 
 // var robotwalkImg = null;
 var robotwalkSheet = null;
+var levelMap = null;
 
 /*var frameRate = 1000/30;
 var frame = 0;
@@ -51,6 +52,7 @@ var loadAssets = function () {
 };
 
 /* --- SpriteFrame --- */
+
 function SpriteFrame(name, x, y, width, height) {
 	this.name = name;
 	this.x = x;
@@ -70,8 +72,8 @@ function SpriteSheet(name) {
 	this.loaded = false;
 }
 
-SpriteSheet.prototype.load = function(){
-	console.log("load sprite " + MEDIA_IMG + this.name);
+SpriteSheet.prototype.load = function() {
+	console.log("loading sprite " + MEDIA_IMG + this.name);
 
 	// load json
 	var sprSheet = this;
@@ -93,10 +95,60 @@ SpriteSheet.prototype.load = function(){
 					frame.frame.w, frame.frame.h);
 			sprSheet.frames.push(spriteFrame);
 		}
-
 	});
 }
 
+/* --- TileSet --- */
+
+function TileSet(name) {
+	this.name = name;
+	this.imagefile = "";
+	this.image = null;
+	this.loaded = false;
+}
+
+/* --- TileMap --- */
+
+function TileMap(name) {
+	this.name = name;			// json file name
+	this.parsed = null;		// json parsed
+	this.tilesets = [];		// tileset array
+	this.tilesetIndex = 0;
+	this.loaded = false;
+}
+
+TileMap.prototype.load = function() {
+	console.log("loading tile map " + MEDIA_IMG + this.name);
+
+	// load json
+	var tmap = this;
+	xhrGet(MEDIA_IMG + this.name, function() {
+		tmap.parsed = JSON.parse(this.responseText);
+
+		// load tilesets
+		for (var tsIndex = 0; tsIndex < tmap.parsed.tilesets.length; tsIndex++) {
+			var ts = tmap.parsed.tilesets[tsIndex];
+			console.log("tileset " + ts.name);
+
+			// create tileset
+			var tileset = new TileSet(ts.name);
+			tmap.tilesets.push(tileset);
+			tileset.imagefile = ts.image;
+
+			// load tileset image
+			tileset.image = new Image();
+			tileset.image.onload = function () {
+					console.log("loaded image " + tileset.name);
+					tileset.loaded = true;
+			};
+			tileset.image.src = MEDIA_IMG + tileset.imagefile;
+		}
+
+
+
+	});
+
+}
 
 /* --- --- */
 
@@ -141,6 +193,9 @@ var setup = function() {
 	robotwalkSheet = new SpriteSheet('robotwalksheet.json');
 	robotwalkSheet.load();
 
+	levelMap = new TileMap('desert.json');
+	levelMap.load();
+
 	setInterval(draw, 150);
 };
 
@@ -151,13 +206,20 @@ var setup = function() {
 
 var draw = function() {
 
+	context.clearRect(0, 0, canvas.width, canvas.height);
+
+	if (levelMap && levelMap.tilesets[levelMap.tilesetIndex] &&
+		  levelMap.tilesets[levelMap.tilesetIndex].loaded) {
+		var levelTileset = levelMap.tilesets[levelMap.tilesetIndex];
+		//context.drawImage(levelTileset.image, 0, 0);		
+	}
+
 	if (robotwalkSheet && robotwalkSheet.loaded) {
 		// context.drawImage(robotwalkSheet.image, 10, 10);
 		robotwalkSheet.frameIndex++;
 		robotwalkSheet.frameIndex =
 				robotwalkSheet.frameIndex % robotwalkSheet.frames.length;
 		var frame = robotwalkSheet.frames[robotwalkSheet.frameIndex];
-		context.clearRect(0, 0, canvas.width, canvas.height);
 		context.drawImage(robotwalkSheet.image, frame.x, frame.y, frame.width,
 				frame.height, 150, 150, frame.width, frame.height);
 	}
